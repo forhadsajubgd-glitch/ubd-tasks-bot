@@ -70,7 +70,8 @@ def start(message):
 
         users[user_id] = {
             "balance": 0,
-            "referrals": 0
+            "referrals": 0,
+            "verified": False
         }
 
         # ===== REFERRAL BONUS =====
@@ -79,7 +80,11 @@ def start(message):
 
             referrer = args[1]
 
-            if referrer != user_id and referrer in users:
+            if (
+                referrer != user_id
+                and referrer in users
+                and users[user_id]["verified"] == False
+            ):
 
                 users[referrer]["balance"] += REF_BONUS
 
@@ -103,15 +108,11 @@ def start(message):
         f"""
 👋 Welcome To UBD TASKS
 
-📢 Complete All Tasks
+📢 Complete All Tasks First
 
 💰 Referral Bonus = ৳{REF_BONUS}
 
 💸 Minimum Withdraw = ৳{MIN_WITHDRAW}
-
-✅ Join Channels
-✅ Join Bots
-✅ Subscribe YouTube
 """,
         reply_markup=markup
     )
@@ -234,9 +235,13 @@ def callback(call):
 
         if ok1 and ok2 and ok3:
 
+            users[user_id]["verified"] = True
+
+            save_users()
+
             bot.answer_callback_query(
                 call.id,
-                "✅ All Channels Verified"
+                "✅ Verification Successful"
             )
 
             bot.send_message(
@@ -290,6 +295,15 @@ def balance(message):
 def refer(message):
 
     user_id = str(message.from_user.id)
+
+    if users[user_id]["verified"] == False:
+
+        bot.send_message(
+            message.chat.id,
+            "❌ First Complete Verification"
+        )
+
+        return
 
     username = bot.get_me().username
 
