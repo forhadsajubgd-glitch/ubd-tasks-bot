@@ -1,11 +1,16 @@
 import telebot
-from telebot.types import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
+from telebot.types import (
+    ReplyKeyboardMarkup,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton
+)
+
 import json
 import os
 
 # ================= CONFIG =================
 
-TOKEN = "8899354895:AAGDhY-1DT4vQIbcWpR4u2h7MS4radBeNA4"
+TOKEN = "YOUR_BOT_TOKEN"
 
 ADMIN_ID = 7237976087
 
@@ -35,13 +40,14 @@ if os.path.exists(DATA_FILE):
         users = json.load(f)
 
 else:
-
     users = {}
+
 
 def save_users():
 
     with open(DATA_FILE, "w") as f:
         json.dump(users, f)
+
 
 # ================= START =================
 
@@ -52,15 +58,15 @@ def start(message):
 
     args = message.text.split()
 
-    # CREATE USER
     if user_id not in users:
 
         users[user_id] = {
             "balance": 0,
-            "referrals": 0
+            "referrals": 0,
+            "completed": []
         }
 
-        # REFERRAL BONUS
+        # Referral bonus
         if len(args) > 1:
 
             referrer = args[1]
@@ -70,16 +76,13 @@ def start(message):
                 users[referrer]["balance"] += REF_BONUS
                 users[referrer]["referrals"] += 1
 
-                save_users()
-
                 bot.send_message(
                     referrer,
-                    f"🎉 New Referral Joined!\n💰 Earned ৳{REF_BONUS}"
+                    f"🎉 New Referral!\n💰 Earned ৳{REF_BONUS}"
                 )
 
         save_users()
 
-    # MENU
     markup = ReplyKeyboardMarkup(resize_keyboard=True)
 
     markup.row("📋 Tasks", "💰 Balance")
@@ -88,17 +91,15 @@ def start(message):
 
     bot.send_message(
         message.chat.id,
-        f"""
-👋 Welcome To UBD TASKS BOT
+        """👋 Welcome To UBD TASKS
 
-💵 Earn Money By:
+💰 Earn Money By Completing Tasks
 
-✅ Joining Channels
-✅ Joining Bots
-✅ Watching YouTube
+✅ Join Channels
+✅ Join Bots
+✅ Refer Friends
 
-👥 Refer Friends & Earn ৳{REF_BONUS}
-""",
+💵 Every Task Reward = ৳2""",
         reply_markup=markup
     )
 
@@ -109,92 +110,134 @@ def tasks(message):
 
     markup = InlineKeyboardMarkup()
 
+    # Channel 1
     markup.row(
-    InlineKeyboardButton(
-        "📢 Join Channel 1",
-        url=CHANNEL_1
-    ),
-
-    InlineKeyboardButton(
-        "✅ Verify",
-        callback_data="task1"
-    )
-)
-
-    markup.add(
         InlineKeyboardButton(
-            "📢 Join Channel 2",
-            url=CHANNEL_2
+            "📢 Join Channel 1",
+            url=CHANNEL_1
+        ),
+
+        InlineKeyboardButton(
+            "✅ Verify",
+            callback_data="task1"
         )
     )
 
-    markup.add(
+    # Channel 2
+    markup.row(
         InlineKeyboardButton(
-            "✅ Verify Channel 2 (+৳2)",
+            "📢 Join Channel 2",
+            url=CHANNEL_2
+        ),
+
+        InlineKeyboardButton(
+            "✅ Verify",
             callback_data="task2"
         )
     )
 
-    markup.add(
+    # Channel 3
+    markup.row(
         InlineKeyboardButton(
             "📢 Join Channel 3",
             url=CHANNEL_3
-        )
-    )
+        ),
 
-    markup.add(
         InlineKeyboardButton(
-            "✅ Verify Channel 3 (+৳2)",
+            "✅ Verify",
             callback_data="task3"
         )
     )
 
-    markup.add(
+    # Bot 1
+    markup.row(
         InlineKeyboardButton(
             "🤖 Join Bot 1",
             url=BOT_1
-        )
-    )
+        ),
 
-    markup.add(
         InlineKeyboardButton(
-            "✅ Verify Bot 1 (+৳2)",
+            "✅ Verify",
             callback_data="task4"
         )
     )
 
-    markup.add(
+    # Bot 2
+    markup.row(
         InlineKeyboardButton(
             "🤖 Join Bot 2",
             url=BOT_2
-        )
-    )
+        ),
 
-    markup.add(
         InlineKeyboardButton(
-            "✅ Verify Bot 2 (+৳2)",
+            "✅ Verify",
             callback_data="task5"
         )
     )
 
-    markup.add(
+    # YouTube
+    markup.row(
         InlineKeyboardButton(
             "▶️ Subscribe YouTube",
             url=YOUTUBE
-        )
-    )
+        ),
 
-    markup.add(
         InlineKeyboardButton(
-            "✅ Verify YouTube (+৳2)",
+            "✅ Verify",
             callback_data="task6"
         )
     )
 
     bot.send_message(
         message.chat.id,
-        "📋 Complete Tasks Then Click Verify",
+        "📋 Complete All Tasks:",
         reply_markup=markup
+    )
+
+# ================= VERIFY =================
+
+@bot.callback_query_handler(func=lambda call: True)
+def callback(call):
+
+    user_id = str(call.from_user.id)
+
+    if user_id not in users:
+
+        users[user_id] = {
+            "balance": 0,
+            "referrals": 0,
+            "completed": []
+        }
+
+    if "completed" not in users[user_id]:
+        users[user_id]["completed"] = []
+
+    # Prevent repeat reward
+    if call.data in users[user_id]["completed"]:
+
+        bot.answer_callback_query(
+            call.id,
+            "❌ Already Completed"
+        )
+
+        return
+
+    # Add task to completed
+    users[user_id]["completed"].append(call.data)
+
+    # Add reward
+    users[user_id]["balance"] += 2
+
+    save_users()
+
+    bot.answer_callback_query(
+        call.id,
+        "✅ Reward Added ৳2"
+    )
+
+    bot.send_message(
+        call.message.chat.id,
+        f"🎉 Task Completed\n💰 Balance: ৳{users[user_id]['balance']}"
     )
 
 # ================= BALANCE =================
@@ -208,24 +251,21 @@ def balance(message):
 
         users[user_id] = {
             "balance": 0,
-            "referrals": 0
+            "referrals": 0,
+            "completed": []
         }
 
         save_users()
 
     bal = users[user_id]["balance"]
 
-    refs = users[user_id]["referrals"]
-
     bot.send_message(
         message.chat.id,
-        f"""
-💰 YOUR BALANCE
+        f"""💰 YOUR BALANCE
 
 💵 Balance: ৳{bal}
 
-👥 Referrals: {refs}
-"""
+👥 Referrals: {users[user_id]['referrals']}"""
     )
 
 # ================= REFER =================
@@ -241,15 +281,12 @@ def refer(message):
 
     bot.send_message(
         message.chat.id,
-        f"""
-👥 REFER & EARN
+        f"""👥 REFER & EARN
 
-💰 Earn ৳{REF_BONUS} Per Referral
+💰 Earn ৳3 Per Referral
 
-🔗 Your Referral Link:
-
-{link}
-"""
+🔗 Your Link:
+{link}"""
     )
 
 # ================= LEADERBOARD =================
@@ -288,166 +325,18 @@ def withdraw(message):
 
         bot.send_message(
             message.chat.id,
-            f"❌ Minimum Withdraw Is ৳{MIN_WITHDRAW}"
+            f"❌ Minimum Withdraw = ৳{MIN_WITHDRAW}"
         )
 
-    else:
-
-        msg = bot.send_message(
-            message.chat.id,
-            "📲 Send Your Bkash/Nagad Number"
-        )
-
-        bot.register_next_step_handler(msg, process_number)
-
-# ================= PROCESS NUMBER =================
-
-def process_number(message):
-
-    number = message.text
-
-    user_id = str(message.from_user.id)
-
-    bal = users[user_id]["balance"]
-
-    bot.send_message(
-        ADMIN_ID,
-        f"""
-💸 NEW WITHDRAW REQUEST
-
-👤 Name: {message.from_user.first_name}
-
-🆔 User ID: {user_id}
-
-💰 Amount: ৳{bal}
-
-📲 Number: {number}
-"""
-    )
-
-    users[user_id]["balance"] = 0
-
-    save_users()
+        return
 
     bot.send_message(
         message.chat.id,
-        "✅ Withdraw Request Submitted Successfully"
-    )
-
-# ================= ADMIN ADD BALANCE =================
-
-@bot.message_handler(commands=['add'])
-def add_balance(message):
-
-    if message.from_user.id != ADMIN_ID:
-        return
-
-    try:
-
-        cmd = message.text.split()
-
-        user_id = cmd[1]
-
-        amount = int(cmd[2])
-
-        if user_id not in users:
-
-            users[user_id] = {
-                "balance": 0,
-                "referrals": 0
-            }
-
-        users[user_id]["balance"] += amount
-
-        save_users()
-
-        bot.send_message(
-            message.chat.id,
-            f"✅ Added ৳{amount} To {user_id}"
-        )
-
-        bot.send_message(
-            user_id,
-            f"🎉 Admin Added ৳{amount} To Your Balance"
-        )
-
-    except:
-
-        bot.send_message(
-            message.chat.id,
-            "Usage:\n/add USER_ID AMOUNT"
-        )
-
-# ================= BROADCAST =================
-
-@bot.message_handler(commands=['broadcast'])
-def broadcast(message):
-
-    if message.from_user.id != ADMIN_ID:
-        return
-
-    text = message.text.replace("/broadcast ", "")
-
-    total = 0
-
-    for user_id in users:
-
-        try:
-
-            bot.send_message(user_id, text)
-
-            total += 1
-
-        except:
-            pass
-
-    bot.send_message(
-        message.chat.id,
-        f"✅ Broadcast Sent To {total} Users"
+        "💳 Send Your Bkash/Nagad Number"
     )
 
 # ================= RUN =================
 
 print("Bot Running...")
 
-@bot.callback_query_handler(func=lambda call: True)
-def callback(call):
-
-    user_id = str(call.from_user.id)
-
-    if user_id not in users:
-
-        users[user_id] = {
-            "balance": 0,
-            "referrals": 0,
-            "completed": []
-        }
-
-    if "completed" not in users[user_id]:
-        users[user_id]["completed"] = []
-
-    if call.data in users[user_id]["completed"]:
-
-        bot.answer_callback_query(
-            call.id,
-            "❌ Already Completed"
-        )
-
-        return
-
-    users[user_id]["completed"].append(call.data)
-
-    users[user_id]["balance"] += 2
-
-    save_users()
-
-    bot.answer_callback_query(
-        call.id,
-        "✅ Reward Added ৳2"
-    )
-
-    bot.send_message(
-        call.message.chat.id,
-        f"🎉 Task Completed\n💰 Balance: ৳{users[user_id]['balance']}"
-    )
 bot.infinity_polling()
