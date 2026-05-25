@@ -1,18 +1,11 @@
 import telebot
-from telebot.types import (
-    ReplyKeyboardMarkup,
-    InlineKeyboardMarkup,
-    InlineKeyboardButton
-)
-
+from telebot.types import *
 import json
 import os
 
 # ================= CONFIG =================
 
 TOKEN = "8899354895:AAGDhY-1DT4vQIbcWpR4u2h7MS4radBeNA4"
-
-ADMIN_ID = 7237976087
 
 CHANNEL_1 = "https://t.me/remembermefrnd"
 CHANNEL_2 = "https://t.me/UBDTG_Earn_Bot"
@@ -66,7 +59,7 @@ def start(message):
             "completed": []
         }
 
-        # Referral bonus
+        # Referral
         if len(args) > 1:
 
             referrer = args[1]
@@ -78,7 +71,7 @@ def start(message):
 
                 bot.send_message(
                     referrer,
-                    f"🎉 New Referral!\n💰 Earned ৳{REF_BONUS}"
+                    f"🎉 New Referral!\n💰 +৳{REF_BONUS}"
                 )
 
         save_users()
@@ -108,89 +101,47 @@ def start(message):
 @bot.message_handler(func=lambda m: m.text == "📋 Tasks")
 def tasks(message):
 
-    markup = InlineKeyboardMarkup()
+    markup = InlineKeyboardMarkup(row_width=2)
 
     # Channel 1
     markup.row(
-        InlineKeyboardButton(
-            "📢 Join Channel 1",
-            url=CHANNEL_1
-        ),
-
-        InlineKeyboardButton(
-            "✅ Verify",
-            callback_data="task1"
-        )
+        InlineKeyboardButton("📢 Channel 1", url=CHANNEL_1),
+        InlineKeyboardButton("✅ Verify", callback_data="task1")
     )
 
     # Channel 2
     markup.row(
-        InlineKeyboardButton(
-            "📢 Join Channel 2",
-            url=CHANNEL_2
-        ),
-
-        InlineKeyboardButton(
-            "✅ Verify",
-            callback_data="task2"
-        )
+        InlineKeyboardButton("📢 Channel 2", url=CHANNEL_2),
+        InlineKeyboardButton("✅ Verify", callback_data="task2")
     )
 
     # Channel 3
     markup.row(
-        InlineKeyboardButton(
-            "📢 Join Channel 3",
-            url=CHANNEL_3
-        ),
-
-        InlineKeyboardButton(
-            "✅ Verify",
-            callback_data="task3"
-        )
+        InlineKeyboardButton("📢 Channel 3", url=CHANNEL_3),
+        InlineKeyboardButton("✅ Verify", callback_data="task3")
     )
 
     # Bot 1
     markup.row(
-        InlineKeyboardButton(
-            "🤖 Join Bot 1",
-            url=BOT_1
-        ),
-
-        InlineKeyboardButton(
-            "✅ Verify",
-            callback_data="task4"
-        )
+        InlineKeyboardButton("🤖 Bot 1", url=BOT_1),
+        InlineKeyboardButton("✅ Verify", callback_data="task4")
     )
 
     # Bot 2
     markup.row(
-        InlineKeyboardButton(
-            "🤖 Join Bot 2",
-            url=BOT_2
-        ),
-
-        InlineKeyboardButton(
-            "✅ Verify",
-            callback_data="task5"
-        )
+        InlineKeyboardButton("🤖 Bot 2", url=BOT_2),
+        InlineKeyboardButton("✅ Verify", callback_data="task5")
     )
 
     # YouTube
     markup.row(
-        InlineKeyboardButton(
-            "▶️ Subscribe YouTube",
-            url=YOUTUBE
-        ),
-
-        InlineKeyboardButton(
-            "✅ Verify",
-            callback_data="task6"
-        )
+        InlineKeyboardButton("▶️ YouTube", url=YOUTUBE),
+        InlineKeyboardButton("✅ Verify", callback_data="task6")
     )
 
     bot.send_message(
         message.chat.id,
-        "📋 Complete All Tasks:",
+        "📋 Complete The Tasks:",
         reply_markup=markup
     )
 
@@ -209,10 +160,12 @@ def callback(call):
             "completed": []
         }
 
+    # completed list না থাকলে create
     if "completed" not in users[user_id]:
+
         users[user_id]["completed"] = []
 
-    # Prevent repeat reward
+    # Already completed check
     if call.data in users[user_id]["completed"]:
 
         bot.answer_callback_query(
@@ -222,22 +175,24 @@ def callback(call):
 
         return
 
-    # Add task to completed
-    users[user_id]["completed"].append(call.data)
-
-    # Add reward
+    # Reward add
     users[user_id]["balance"] += 2
+
+    # Save completed task
+    users[user_id]["completed"].append(call.data)
 
     save_users()
 
     bot.answer_callback_query(
         call.id,
-        "✅ Reward Added ৳2"
+        "✅ Reward Added +৳2"
     )
 
     bot.send_message(
         call.message.chat.id,
-        f"🎉 Task Completed\n💰 Balance: ৳{users[user_id]['balance']}"
+        f"""🎉 Task Completed
+
+💰 Balance: ৳{users[user_id]['balance']}"""
     )
 
 # ================= BALANCE =================
@@ -257,13 +212,11 @@ def balance(message):
 
         save_users()
 
-    bal = users[user_id]["balance"]
-
     bot.send_message(
         message.chat.id,
         f"""💰 YOUR BALANCE
 
-💵 Balance: ৳{bal}
+💵 Balance: ৳{users[user_id]['balance']}
 
 👥 Referrals: {users[user_id]['referrals']}"""
     )
@@ -273,11 +226,11 @@ def balance(message):
 @bot.message_handler(func=lambda m: m.text == "👥 Refer")
 def refer(message):
 
-    user_id = message.from_user.id
+    user_id = str(message.from_user.id)
 
     bot_username = bot.get_me().username
 
-    link = f"https://t.me/{bot_username}?start={user_id}"
+    ref_link = f"https://t.me/{bot_username}?start={user_id}"
 
     bot.send_message(
         message.chat.id,
@@ -286,7 +239,7 @@ def refer(message):
 💰 Earn ৳3 Per Referral
 
 🔗 Your Link:
-{link}"""
+{ref_link}"""
     )
 
 # ================= LEADERBOARD =================
