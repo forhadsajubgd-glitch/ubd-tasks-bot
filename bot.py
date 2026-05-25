@@ -3,37 +3,37 @@ from telebot.types import *
 import json
 import os
 
-# ================== CONFIG ==================
+# ================= CONFIG =================
 
 TOKEN = "8899354895:AAGDhY-1DT4vQIbcWpR4u2h7MS4radBeNA4"
 
-# ===== CHANNEL USERNAME =====
+# ============== CHANNEL USERNAME ==============
 
 CHANNEL_1_USERNAME = "@remembermefrnd"
 CHANNEL_2_USERNAME = "@UBDTG_Earn_Bot"
 CHANNEL_3_USERNAME = "@lotsofincome"
 
-# ===== CHANNEL LINK =====
+# ============== CHANNEL LINKS ==============
 
 CHANNEL_1 = "https://t.me/remembermefrnd"
 CHANNEL_2 = "https://t.me/UBDTG_Earn_Bot"
 CHANNEL_3 = "https://t.me/lotsofincome"
 
-# ===== BOT LINKS =====
+# ============== BOT LINKS ==============
 
 BOT_1 = "https://t.me/FoxiGrowbot?start=ref_7237976087"
 BOT_2 = "https://t.me/GmailFarmerBot?start=7237976087"
 
-# ===== YOUTUBE =====
+# ============== YOUTUBE ==============
 
 YOUTUBE = "https://youtube.com/@ultrabd"
 
-# ===== SETTINGS =====
+# ============== SETTINGS ==============
 
 REF_BONUS = 4
 MIN_WITHDRAW = 20
 
-# ============================================
+# ======================================
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -80,19 +80,14 @@ def start(message):
 
             referrer = args[1]
 
-            if (
-                referrer != user_id
-                and referrer in users
-                and users[user_id]["verified"] == False
-            ):
+            if referrer != user_id and referrer in users:
 
                 users[referrer]["balance"] += REF_BONUS
-
                 users[referrer]["referrals"] += 1
 
                 bot.send_message(
                     referrer,
-                    f"🎉 New Referral Joined!\n💰 +৳{REF_BONUS}"
+                    f"🎉 New Referral!\n💰 +৳{REF_BONUS}"
                 )
 
         save_users()
@@ -100,7 +95,6 @@ def start(message):
     markup = ReplyKeyboardMarkup(resize_keyboard=True)
 
     markup.row("📋 Tasks", "💰 Balance")
-
     markup.row("👥 Refer", "💸 Withdraw")
 
     bot.send_message(
@@ -108,7 +102,7 @@ def start(message):
         f"""
 👋 Welcome To UBD TASKS
 
-📢 Complete All Tasks First
+📢 Join All Channels First
 
 💰 Referral Bonus = ৳{REF_BONUS}
 
@@ -172,31 +166,29 @@ def tasks(message):
         )
     )
 
-    # ===== VERIFY BUTTON =====
+    # ===== ONLY ONE VERIFY BUTTON =====
 
     markup.add(
         InlineKeyboardButton(
-            "✅ Verify All",
-            callback_data="verify_all"
+            "✅ Verify",
+            callback_data="verify"
         )
     )
 
     bot.send_message(
         message.chat.id,
-        "📋 Complete All Tasks Then Click Verify:",
+        "📋 Complete All Tasks Then Click Verify",
         reply_markup=markup
     )
 
 # ================= VERIFY =================
 
-@bot.callback_query_handler(func=lambda call: True)
-def callback(call):
+@bot.callback_query_handler(func=lambda call: call.data == "verify")
+def verify(call):
 
-    user_id = str(call.from_user.id)
+    user_id = call.from_user.id
 
     try:
-
-        # ===== CHANNEL CHECK =====
 
         ch1 = bot.get_chat_member(
             CHANNEL_1_USERNAME,
@@ -213,29 +205,13 @@ def callback(call):
             user_id
         )
 
-        ok1 = ch1.status in [
-            "member",
-            "administrator",
-            "creator"
-        ]
-
-        ok2 = ch2.status in [
-            "member",
-            "administrator",
-            "creator"
-        ]
-
-        ok3 = ch3.status in [
-            "member",
-            "administrator",
-            "creator"
-        ]
-
-        # ===== VERIFIED =====
+        ok1 = ch1.status in ["member", "administrator", "creator"]
+        ok2 = ch2.status in ["member", "administrator", "creator"]
+        ok3 = ch3.status in ["member", "administrator", "creator"]
 
         if ok1 and ok2 and ok3:
 
-            users[user_id]["verified"] = True
+            users[str(user_id)]["verified"] = True
 
             save_users()
 
@@ -247,7 +223,7 @@ def callback(call):
             bot.send_message(
                 call.message.chat.id,
                 """
-🎉 Verification Successful!
+🎉 Verification Successful
 
 ✅ All Channels Joined
 """
@@ -260,7 +236,9 @@ def callback(call):
                 "❌ Join All Channels First"
             )
 
-    except:
+    except Exception as e:
+
+        print(e)
 
         bot.answer_callback_query(
             call.id,
@@ -275,7 +253,6 @@ def balance(message):
     user_id = str(message.from_user.id)
 
     balance = users[user_id]["balance"]
-
     refs = users[user_id]["referrals"]
 
     bot.send_message(
@@ -300,7 +277,7 @@ def refer(message):
 
         bot.send_message(
             message.chat.id,
-            "❌ First Complete Verification"
+            "❌ Verify First"
         )
 
         return
