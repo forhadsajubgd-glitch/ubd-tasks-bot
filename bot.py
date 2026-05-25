@@ -104,8 +104,6 @@ def start(message):
 
 # ================= TASKS =================
 
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
-
 @bot.message_handler(func=lambda m: m.text == "📋 Tasks")
 def tasks(message):
 
@@ -113,7 +111,7 @@ def tasks(message):
 
     markup.add(
         InlineKeyboardButton(
-            "✅ Join Channel 1",
+            "📢 Join Channel 1",
             url=CHANNEL_1
         )
     )
@@ -127,6 +125,34 @@ def tasks(message):
 
     markup.add(
         InlineKeyboardButton(
+            "📢 Join Channel 2",
+            url=CHANNEL_2
+        )
+    )
+
+    markup.add(
+        InlineKeyboardButton(
+            "✅ Verify Channel 2 (+৳2)",
+            callback_data="task2"
+        )
+    )
+
+    markup.add(
+        InlineKeyboardButton(
+            "📢 Join Channel 3",
+            url=CHANNEL_3
+        )
+    )
+
+    markup.add(
+        InlineKeyboardButton(
+            "✅ Verify Channel 3 (+৳2)",
+            callback_data="task3"
+        )
+    )
+
+    markup.add(
+        InlineKeyboardButton(
             "🤖 Join Bot 1",
             url=BOT_1
         )
@@ -135,7 +161,21 @@ def tasks(message):
     markup.add(
         InlineKeyboardButton(
             "✅ Verify Bot 1 (+৳2)",
-            callback_data="task2"
+            callback_data="task4"
+        )
+    )
+
+    markup.add(
+        InlineKeyboardButton(
+            "🤖 Join Bot 2",
+            url=BOT_2
+        )
+    )
+
+    markup.add(
+        InlineKeyboardButton(
+            "✅ Verify Bot 2 (+৳2)",
+            callback_data="task5"
         )
     )
 
@@ -149,13 +189,13 @@ def tasks(message):
     markup.add(
         InlineKeyboardButton(
             "✅ Verify YouTube (+৳2)",
-            callback_data="task3"
+            callback_data="task6"
         )
     )
 
     bot.send_message(
         message.chat.id,
-        "📋 Complete Tasks And Click Verify",
+        "📋 Complete Tasks Then Click Verify",
         reply_markup=markup
     )
 
