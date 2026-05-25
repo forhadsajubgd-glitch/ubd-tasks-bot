@@ -116,7 +116,7 @@ https://t.me/FoxiGrowbot?start=ref_7237976087
 3️⃣ Join Update Channel — ৳2
 https://t.me/UBDTG_Earn_Bot
 
-4️⃣ Refer Friend — ৳2
+4️⃣ Refer Friend — ৳3
 """
 
     bot.send_message(message.chat.id, text)
@@ -150,7 +150,7 @@ def refer(message):
     text = f"""
 👥 Invite Your Friends
 
-💵 Earn ৳2 Per Referral
+💵 Earn ৳3 Per Referral
 
 🔗 Your Link:
 {link}
@@ -225,7 +225,7 @@ def process_number(message):
 # ================= ADMIN =================
 
 @bot.message_handler(commands=['broadcast'])
-def broadcast(message):
+def /broadcast Hello Users:
 
     if message.chat.id != ADMIN_ID:
         return
