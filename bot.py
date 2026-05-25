@@ -372,4 +372,44 @@ def broadcast(message):
 
 print("Bot Running...")
 
+@bot.callback_query_handler(func=lambda call: True)
+def callback(call):
+
+    user_id = str(call.from_user.id)
+
+    if user_id not in users:
+
+        users[user_id] = {
+            "balance": 0,
+            "referrals": 0,
+            "completed": []
+        }
+
+    if "completed" not in users[user_id]:
+        users[user_id]["completed"] = []
+
+    if call.data in users[user_id]["completed"]:
+
+        bot.answer_callback_query(
+            call.id,
+            "❌ Already Completed"
+        )
+
+        return
+
+    users[user_id]["completed"].append(call.data)
+
+    users[user_id]["balance"] += 2
+
+    save_users()
+
+    bot.answer_callback_query(
+        call.id,
+        "✅ Reward Added ৳2"
+    )
+
+    bot.send_message(
+        call.message.chat.id,
+        f"🎉 Task Completed\n💰 Balance: ৳{users[user_id]['balance']}"
+    )
 bot.infinity_polling()
