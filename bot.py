@@ -1,102 +1,96 @@
 import telebot
-import sqlite3
 from telebot.types import ReplyKeyboardMarkup
+import json
+import os
+
+# ================= CONFIG =================
 
 TOKEN = "8899354895:AAGDhY-1DT4vQIbcWpR4u2h7MS4radBeNA4"
-ADMIN_ID = 7237976087  # আপনার Telegram ID
+ADMIN_ID = 7237976087
+
+CHANNEL_1 = "https://t.me/remembermefrnd"
+CHANNEL_2 = "https://t.me/UBDTG_Earn_Bot"
+CHANNEL_3 = "https://t.me/lotsofincome"
+
+BOT_1 = "https://t.me/FoxiGrowbot?start=ref_7237976087"
+BOT_2 = "https://t.me/GmailFarmerBot?start=7237976087"
+
+YOUTUBE = "https://youtube.com/@ultrabd"
+
+REF_BONUS = 3
+MIN_WITHDRAW = 10
+
+# ==========================================
 
 bot = telebot.TeleBot(TOKEN)
 
+DATA_FILE = "users.json"
+
 # ================= DATABASE =================
 
-conn = sqlite3.connect("database.db", check_same_thread=False)
-cursor = conn.cursor()
+if os.path.exists(DATA_FILE):
+    with open(DATA_FILE, "r") as f:
+        users = json.load(f)
+else:
+    users = {}
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS users(
-    user_id INTEGER PRIMARY KEY,
-    balance REAL DEFAULT 0,
-    invited_by INTEGER
-)
-""")
-
-conn.commit()
-
-# ================= MENU =================
-
-def main_menu():
-    markup = ReplyKeyboardMarkup(resize_keyboard=True)
-
-    markup.row("📋 Tasks", "💰 Balance")
-    markup.row("👥 Refer", "💸 Withdraw")
-
-    return markup
+def save_users():
+    with open(DATA_FILE, "w") as f:
+        json.dump(users, f)
 
 # ================= START =================
 
 @bot.message_handler(commands=['start'])
 def start(message):
 
-    user_id = message.chat.id
+    user_id = str(message.from_user.id)
+
+    # REF SYSTEM
     args = message.text.split()
 
-    ref = None
+    if user_id not in users:
 
-    if len(args) > 1:
-        ref = args[1]
+        users[user_id] = {
+            "balance": 0,
+            "referrals": 0
+        }
 
-    cursor.execute(
-        "SELECT * FROM users WHERE user_id=?",
-        (user_id,)
-    )
+        # Referral reward
+        if len(args) > 1:
 
-    user = cursor.fetchone()
+            referrer = args[1]
 
-    if not user:
+            if referrer != user_id and referrer in users:
 
-        invited_by = None
+                users[referrer]["balance"] += REF_BONUS
+                users[referrer]["referrals"] += 1
 
-        if ref:
-            invited_by = int(ref)
+                bot.send_message(
+                    referrer,
+                    f"🎉 New Referral Joined!\n💰 Earned ৳{REF_BONUS}"
+                )
 
-        cursor.execute(
-            "INSERT INTO users(user_id, invited_by) VALUES(?,?)",
-            (user_id, invited_by)
-        )
+        save_users()
 
-        conn.commit()
+    markup = ReplyKeyboardMarkup(resize_keyboard=True)
 
-        # REFERRAL BONUS
-        if invited_by and invited_by != user_id:
-
-            cursor.execute(
-                "UPDATE users SET balance = balance + 2 WHERE user_id=?",
-                (invited_by,)
-            )
-
-            conn.commit()
-
-            bot.send_message(
-                invited_by,
-                "🎉 New referral joined!\n💵 You earned ৳2"
-            )
-
-    text = """
-👋 Welcome To UBD TASKS
-
-💵 Earn Money By Completing Tasks
-
-✅ Channel Join
-✅ Bot Join
-✅ Refer Friends
-
-💰 Every Task Reward = ৳2
-"""
+    markup.row("📋 Tasks", "💰 Balance")
+    markup.row("👥 Refer", "🏆 Leaderboard")
+    markup.row("💸 Withdraw")
 
     bot.send_message(
-        user_id,
-        text,
-        reply_markup=main_menu()
+        message.chat.id,
+        """
+👋 Welcome To UBD TASKS BOT
+
+💵 Earn Money By:
+✅ Joining Channels
+✅ Joining Bots
+✅ Watching YouTube
+
+👥 Refer Friends & Earn ৳3
+""",
+        reply_markup=markup
     )
 
 # ================= TASKS =================
@@ -104,22 +98,26 @@ def start(message):
 @bot.message_handler(func=lambda m: m.text == "📋 Tasks")
 def tasks(message):
 
-    text = """
+    text = f"""
 📋 AVAILABLE TASKS
 
-1️⃣ Join Main Channel — ৳2
-https://t.me/remembermefrnd
+1️⃣ Join Telegram Channel — ৳2
+{CHANNEL_1}
 
-2️⃣ Join Easy Income Bot — ৳2
-https://t.me/FoxiGrowbot?start=ref_7237976087
+2️⃣ Join Telegram Channel — ৳2
+{CHANNEL_2}
 
-3️⃣ Join Update Channel — ৳2
-https://t.me/UBDTG_Earn_Bot
+3️⃣ Join Telegram Channel — ৳2
+{CHANNEL_3}
 
-4️⃣ Join Easy Income Channel
-https://t.me/lotsofincome
+4️⃣ Join Telegram Bot — ৳2
+{BOT_1}
 
-5️⃣Refer Friend — ৳3
+5️⃣ Join Telegram Bot — ৳2
+{BOT_2}
+
+6️⃣ Subscribe YouTube Channel — ৳2
+{YOUTUBE}
 """
 
     bot.send_message(message.chat.id, text)
@@ -129,16 +127,25 @@ https://t.me/lotsofincome
 @bot.message_handler(func=lambda m: m.text == "💰 Balance")
 def balance(message):
 
-    cursor.execute(
-        "SELECT balance FROM users WHERE user_id=?",
-        (message.chat.id,)
-    )
+    user_id = str(message.from_user.id)
 
-    bal = cursor.fetchone()[0]
+    if user_id not in users:
+        users[user_id] = {
+            "balance": 0,
+            "referrals": 0
+        }
+        save_users()
+
+    bal = users[user_id]["balance"]
 
     bot.send_message(
         message.chat.id,
-        f"💰 Your Balance: ৳{bal}"
+        f"""
+💰 YOUR BALANCE
+
+💵 Balance: ৳{bal}
+👥 Referrals: {users[user_id]['referrals']}
+"""
     )
 
 # ================= REFER =================
@@ -146,18 +153,43 @@ def balance(message):
 @bot.message_handler(func=lambda m: m.text == "👥 Refer")
 def refer(message):
 
-    username = bot.get_me().username
+    user_id = message.from_user.id
 
-    link = f"https://t.me/{username}?start={message.chat.id}"
+    bot_username = bot.get_me().username
 
-    text = f"""
-👥 Invite Your Friends
+    link = f"https://t.me/{bot_username}?start={user_id}"
 
-💵 Earn ৳3 Per Referral
+    bot.send_message(
+        message.chat.id,
+        f"""
+👥 REFER & EARN
 
-🔗 Your Link:
+💰 Earn ৳3 Per Referral
+
+🔗 Your Referral Link:
 {link}
 """
+    )
+
+# ================= LEADERBOARD =================
+
+@bot.message_handler(func=lambda m: m.text == "🏆 Leaderboard")
+def leaderboard(message):
+
+    top_users = sorted(
+        users.items(),
+        key=lambda x: x[1]["balance"],
+        reverse=True
+    )
+
+    text = "🏆 TOP USERS\n\n"
+
+    count = 1
+
+    for uid, data in top_users[:10]:
+
+        text += f"{count}. User {uid} — ৳{data['balance']}\n"
+        count += 1
 
     bot.send_message(message.chat.id, text)
 
@@ -166,95 +198,129 @@ def refer(message):
 @bot.message_handler(func=lambda m: m.text == "💸 Withdraw")
 def withdraw(message):
 
-    cursor.execute(
-        "SELECT balance FROM users WHERE user_id=?",
-        (message.chat.id,)
-    )
+    user_id = str(message.from_user.id)
 
-    bal = cursor.fetchone()[0]
+    bal = users[user_id]["balance"]
 
-    if bal < 10:
+    if bal < MIN_WITHDRAW:
 
         bot.send_message(
             message.chat.id,
-            "❌ Minimum Withdraw = ৳10"
+            f"❌ Minimum Withdraw Is ৳{MIN_WITHDRAW}"
         )
 
     else:
 
-        bot.send_message(
+        msg = bot.send_message(
             message.chat.id,
-            "💳 Send Your Bkash/Nagad Number"
+            "📲 Send Your Payment Number"
         )
 
-        bot.register_next_step_handler(
-            message,
-            process_number
-        )
+        bot.register_next_step_handler(msg, process_number)
+
+# ================= PROCESS NUMBER =================
 
 def process_number(message):
 
     number = message.text
 
-    cursor.execute(
-        "SELECT balance FROM users WHERE user_id=?",
-        (message.chat.id,)
-    )
+    user_id = str(message.from_user.id)
 
-    bal = cursor.fetchone()[0]
+    bal = users[user_id]["balance"]
 
-    admin_text = f"""
+    bot.send_message(
+        ADMIN_ID,
+        f"""
 💸 NEW WITHDRAW REQUEST
 
-👤 User: {message.chat.id}
-💵 Amount: ৳{bal}
-📱 Number: {number}
+👤 Name: {message.from_user.first_name}
+🆔 User ID: {user_id}
+
+💰 Amount: ৳{bal}
+
+📲 Number: {number}
 """
-
-    bot.send_message(ADMIN_ID, admin_text)
-
-    cursor.execute(
-        "UPDATE users SET balance = 0 WHERE user_id=?",
-        (message.chat.id,)
     )
 
-    conn.commit()
+    users[user_id]["balance"] = 0
+    save_users()
 
     bot.send_message(
         message.chat.id,
-        "✅ Withdraw Request Sent"
+        "✅ Withdraw Request Submitted Successfully"
     )
 
-# ================= ADMIN =================
+# ================= ADMIN ADD BALANCE =================
 
-@bot.message_handler(commands=['broadcast'])
-def /broadcast Hello Users:
+@bot.message_handler(commands=['add'])
+def add_balance(message):
 
-    if message.chat.id != ADMIN_ID:
+    if message.from_user.id != ADMIN_ID:
         return
 
-    msg = message.text.replace("/broadcast ", "")
+    try:
 
-    cursor.execute("SELECT user_id FROM users")
+        cmd = message.text.split()
 
-    users = cursor.fetchall()
+        user_id = cmd[1]
+        amount = int(cmd[2])
 
-    sent = 0
+        if user_id not in users:
+            users[user_id] = {
+                "balance": 0,
+                "referrals": 0
+            }
 
-    for user in users:
+        users[user_id]["balance"] += amount
+
+        save_users()
+
+        bot.send_message(
+            message.chat.id,
+            f"✅ Added ৳{amount} To {user_id}"
+        )
+
+        bot.send_message(
+            user_id,
+            f"🎉 Admin Added ৳{amount} To Your Balance"
+        )
+
+    except:
+
+        bot.send_message(
+            message.chat.id,
+            "Usage:\n/add USER_ID AMOUNT"
+        )
+
+# ================= BROADCAST =================
+
+@bot.message_handler(commands=['broadcast'])
+def broadcast(message):
+
+    if message.from_user.id != ADMIN_ID:
+        return
+
+    text = message.text.replace("/broadcast ", "")
+
+    total = 0
+
+    for user_id in users:
 
         try:
-            bot.send_message(user[0], msg)
-            sent += 1
+
+            bot.send_message(user_id, text)
+            total += 1
 
         except:
             pass
 
     bot.send_message(
-        ADMIN_ID,
-        f"✅ Broadcast Sent To {sent} Users"
+        message.chat.id,
+        f"✅ Broadcast Sent To {total} Users"
     )
 
-print("BOT RUNNING...")
+# ================= RUN =================
+
+print("Bot Running...")
 
 bot.infinity_polling()
