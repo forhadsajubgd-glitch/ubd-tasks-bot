@@ -116,7 +116,10 @@ https://t.me/FoxiGrowbot?start=ref_7237976087
 3️⃣ Join Update Channel — ৳2
 https://t.me/UBDTG_Earn_Bot
 
-4️⃣ Refer Friend — ৳3
+4️⃣ Join Easy Income Channel
+https://t.me/lotsofincome
+
+5️⃣Refer Friend — ৳3
 """
 
     bot.send_message(message.chat.id, text)
