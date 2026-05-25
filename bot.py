@@ -108,13 +108,13 @@ def tasks(message):
 📋 AVAILABLE TASKS
 
 1️⃣ Join Main Channel — ৳2
-https://t.me/yourchannel
+https://t.me/remembermefrnd
 
-2️⃣ Join Partner Bot — ৳2
-https://t.me/partnerbot
+2️⃣ Join Easy Income Bot — ৳2
+https://t.me/FoxiGrowbot?start=ref_7237976087
 
 3️⃣ Join Update Channel — ৳2
-https://t.me/updatechannel
+https://t.me/UBDTG_Earn_Bot
 
 4️⃣ Refer Friend — ৳2
 """
@@ -170,11 +170,11 @@ def withdraw(message):
 
     bal = cursor.fetchone()[0]
 
-    if bal < 100:
+    if bal < 10:
 
         bot.send_message(
             message.chat.id,
-            "❌ Minimum Withdraw = ৳100"
+            "❌ Minimum Withdraw = ৳10"
         )
 
     else:
