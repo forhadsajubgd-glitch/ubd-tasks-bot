@@ -104,35 +104,60 @@ def start(message):
 
 # ================= TASKS =================
 
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+
 @bot.message_handler(func=lambda m: m.text == "📋 Tasks")
 def tasks(message):
 
-    text = f"""
-📋 AVAILABLE TASKS
+    markup = InlineKeyboardMarkup()
 
-1️⃣ Join Telegram Channel — ৳2
-{CHANNEL_1}
+    markup.add(
+        InlineKeyboardButton(
+            "✅ Join Channel 1",
+            url=CHANNEL_1
+        )
+    )
 
-2️⃣ Join Telegram Channel — ৳2
-{CHANNEL_2}
+    markup.add(
+        InlineKeyboardButton(
+            "✅ Verify Channel 1 (+৳2)",
+            callback_data="task1"
+        )
+    )
 
-3️⃣ Join Telegram Channel — ৳2
-{CHANNEL_3}
+    markup.add(
+        InlineKeyboardButton(
+            "🤖 Join Bot 1",
+            url=BOT_1
+        )
+    )
 
-4️⃣ Join Telegram Bot — ৳2
-{BOT_1}
+    markup.add(
+        InlineKeyboardButton(
+            "✅ Verify Bot 1 (+৳2)",
+            callback_data="task2"
+        )
+    )
 
-5️⃣ Join Telegram Bot — ৳2
-{BOT_2}
+    markup.add(
+        InlineKeyboardButton(
+            "▶️ Subscribe YouTube",
+            url=YOUTUBE
+        )
+    )
 
-6️⃣ Subscribe YouTube Channel — ৳2
-{YOUTUBE}
+    markup.add(
+        InlineKeyboardButton(
+            "✅ Verify YouTube (+৳2)",
+            callback_data="task3"
+        )
+    )
 
-✅ After Completing Tasks
-Contact Admin For Manual Verification
-"""
-
-    bot.send_message(message.chat.id, text)
+    bot.send_message(
+        message.chat.id,
+        "📋 Complete Tasks And Click Verify",
+        reply_markup=markup
+    )
 
 # ================= BALANCE =================
 
