@@ -10,7 +10,7 @@ import os
 
 # ================= CONFIG =================
 
-TOKEN = "YOUR_BOT_TOKEN"
+TOKEN = "8899354895:AAGDhY-1DT4vQIbcWpR4u2h7MS4radBeNA4"
 
 ADMIN_ID = 7237976087
 
