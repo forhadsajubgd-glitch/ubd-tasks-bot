@@ -6,6 +6,7 @@ import os
 # ================= CONFIG =================
 
 TOKEN = "8899354895:AAGDhY-1DT4vQIbcWpR4u2h7MS4radBeNA4"
+
 ADMIN_ID = 7237976087
 
 CHANNEL_1 = "https://t.me/remembermefrnd"
@@ -29,12 +30,16 @@ DATA_FILE = "users.json"
 # ================= DATABASE =================
 
 if os.path.exists(DATA_FILE):
+
     with open(DATA_FILE, "r") as f:
         users = json.load(f)
+
 else:
+
     users = {}
 
 def save_users():
+
     with open(DATA_FILE, "w") as f:
         json.dump(users, f)
 
@@ -45,9 +50,9 @@ def start(message):
 
     user_id = str(message.from_user.id)
 
-    # REF SYSTEM
     args = message.text.split()
 
+    # CREATE USER
     if user_id not in users:
 
         users[user_id] = {
@@ -55,7 +60,7 @@ def start(message):
             "referrals": 0
         }
 
-        # Referral reward
+        # REFERRAL BONUS
         if len(args) > 1:
 
             referrer = args[1]
@@ -65,6 +70,8 @@ def start(message):
                 users[referrer]["balance"] += REF_BONUS
                 users[referrer]["referrals"] += 1
 
+                save_users()
+
                 bot.send_message(
                     referrer,
                     f"🎉 New Referral Joined!\n💰 Earned ৳{REF_BONUS}"
@@ -72,6 +79,7 @@ def start(message):
 
         save_users()
 
+    # MENU
     markup = ReplyKeyboardMarkup(resize_keyboard=True)
 
     markup.row("📋 Tasks", "💰 Balance")
@@ -80,15 +88,16 @@ def start(message):
 
     bot.send_message(
         message.chat.id,
-        """
+        f"""
 👋 Welcome To UBD TASKS BOT
 
 💵 Earn Money By:
+
 ✅ Joining Channels
 ✅ Joining Bots
 ✅ Watching YouTube
 
-👥 Refer Friends & Earn ৳3
+👥 Refer Friends & Earn ৳{REF_BONUS}
 """,
         reply_markup=markup
     )
@@ -118,6 +127,9 @@ def tasks(message):
 
 6️⃣ Subscribe YouTube Channel — ৳2
 {YOUTUBE}
+
+✅ After Completing Tasks
+Contact Admin For Manual Verification
 """
 
     bot.send_message(message.chat.id, text)
@@ -130,13 +142,17 @@ def balance(message):
     user_id = str(message.from_user.id)
 
     if user_id not in users:
+
         users[user_id] = {
             "balance": 0,
             "referrals": 0
         }
+
         save_users()
 
     bal = users[user_id]["balance"]
+
+    refs = users[user_id]["referrals"]
 
     bot.send_message(
         message.chat.id,
@@ -144,7 +160,8 @@ def balance(message):
 💰 YOUR BALANCE
 
 💵 Balance: ৳{bal}
-👥 Referrals: {users[user_id]['referrals']}
+
+👥 Referrals: {refs}
 """
     )
 
@@ -164,9 +181,10 @@ def refer(message):
         f"""
 👥 REFER & EARN
 
-💰 Earn ৳3 Per Referral
+💰 Earn ৳{REF_BONUS} Per Referral
 
 🔗 Your Referral Link:
+
 {link}
 """
     )
@@ -189,6 +207,7 @@ def leaderboard(message):
     for uid, data in top_users[:10]:
 
         text += f"{count}. User {uid} — ৳{data['balance']}\n"
+
         count += 1
 
     bot.send_message(message.chat.id, text)
@@ -213,7 +232,7 @@ def withdraw(message):
 
         msg = bot.send_message(
             message.chat.id,
-            "📲 Send Your Payment Number"
+            "📲 Send Your Bkash/Nagad Number"
         )
 
         bot.register_next_step_handler(msg, process_number)
@@ -234,6 +253,7 @@ def process_number(message):
 💸 NEW WITHDRAW REQUEST
 
 👤 Name: {message.from_user.first_name}
+
 🆔 User ID: {user_id}
 
 💰 Amount: ৳{bal}
@@ -243,6 +263,7 @@ def process_number(message):
     )
 
     users[user_id]["balance"] = 0
+
     save_users()
 
     bot.send_message(
@@ -263,9 +284,11 @@ def add_balance(message):
         cmd = message.text.split()
 
         user_id = cmd[1]
+
         amount = int(cmd[2])
 
         if user_id not in users:
+
             users[user_id] = {
                 "balance": 0,
                 "referrals": 0
@@ -309,6 +332,7 @@ def broadcast(message):
         try:
 
             bot.send_message(user_id, text)
+
             total += 1
 
         except:
