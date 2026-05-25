@@ -109,19 +109,17 @@ def tasks(message):
 
     markup = InlineKeyboardMarkup()
 
-    markup.add(
-        InlineKeyboardButton(
-            "📢 Join Channel 1",
-            url=CHANNEL_1
-        )
-    )
+    markup.row(
+    InlineKeyboardButton(
+        "📢 Join Channel 1",
+        url=CHANNEL_1
+    ),
 
-    markup.add(
-        InlineKeyboardButton(
-            "✅ Verify Channel 1 (+৳2)",
-            callback_data="task1"
-        )
+    InlineKeyboardButton(
+        "✅ Verify",
+        callback_data="task1"
     )
+)
 
     markup.add(
         InlineKeyboardButton(
